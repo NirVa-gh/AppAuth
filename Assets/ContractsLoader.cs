@@ -3,19 +3,49 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections.Generic;
 using UnityEngine.UI;
+using System;
 
 public class ContractsLoader : MonoBehaviour
 {
     [Header("Required References")]
     [SerializeField] private GameObject contractPrefab;
     [SerializeField] private Transform contentParent;
-    [SerializeField] private Button refreshButton;
+    //[SerializeField] private Button refreshButton;
+    [SerializeField] private Button refreshButtonID;
     [SerializeField] private Button createButton;
 
     private void Start()
     {
-        refreshButton.onClick.AddListener(LoadUserContracts);
-        createButton.onClick.AddListener(LoadUserContracts);
+        //refreshButton.onClick.AddListener(LoadUserContracts);
+        createButton.onClick.AddListener(() => {LoadByUserIDContracts(AuthManager.Instance.GetUserId());});
+        refreshButtonID.onClick.AddListener(() => { LoadByUserIDContracts(AuthManager.Instance.GetUserId()); });
+    }
+
+    public void LoadByUserIDContracts(int targetUserID)
+    {
+        StartCoroutine(LoadUserIDRequestsCoroutine(targetUserID));
+    }
+
+    private IEnumerator LoadUserIDRequestsCoroutine(int targetUserID)
+    {
+        string url = $"{AuthManager.Instance.baseURL}/api/requestsByUserID?user_id = {targetUserID}";
+        string authToken = PlayerPrefs.GetString("auth_token");
+        using (UnityWebRequest www = UnityWebRequest.Get(url))
+        {
+            www.SetRequestHeader("Authorization", $"Bearer {authToken}");
+            www.downloadHandler = new DownloadHandlerBuffer();
+
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                ProcessContractsResponse(www.downloadHandler.text);
+            }
+            else
+            {
+                Debug.LogError($"Failed to load contracts: {www.error} (Status: {www.responseCode})");
+            }
+        }
     }
 
     public void LoadUserContracts()

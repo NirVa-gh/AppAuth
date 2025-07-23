@@ -29,6 +29,8 @@ public class AuthManager : MonoBehaviour
             Destroy(gameObject);
         }
         IsInitialized = true;
+
+
     }
     private void NotifyAuthStateChanged(bool isAuthenticated)
     {

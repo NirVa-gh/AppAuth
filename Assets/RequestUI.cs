@@ -32,7 +32,7 @@ public class RequestUI : MonoBehaviour
 
     private void OnSaveClicked()
     {
-        contractsLoader.LoadUserContracts();
+        contractsLoader.LoadByUserIDContracts(AuthManager.Instance.GetUserId());
         if (currentRequestId == 0)
         {
             Debug.LogWarning("Не выбрана заявка для сохранения");

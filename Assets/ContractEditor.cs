@@ -54,6 +54,9 @@ public class ContractEditor : Utility
 
     private void OnEditButtonClicked()
     {
+        contractsLoader.LoadByUserIDContracts(AuthManager.Instance.GetUserId());
+
+
         if (currentRequestId <= 0)
         {
             Debug.LogWarning("Попытка редактирования без ID заявки");
@@ -172,7 +175,7 @@ public class ContractEditor : Utility
 
     public void OnDeleteClicked()
     {
-        contractsLoader.LoadUserContracts();
+        contractsLoader.LoadByUserIDContracts(AuthManager.Instance.GetUserId());
         if (currentRequestId == 0)
         {
             Debug.LogWarning("Не выбрана заявка для удаления");

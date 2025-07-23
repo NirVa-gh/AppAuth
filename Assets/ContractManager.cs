@@ -8,10 +8,11 @@ public class ContractManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private Button createNewButton;
     [SerializeField] private GameObject contractPrefab; // Префаб с ContractEditor
-    [SerializeField] private Transform contractsContainer; // Родитель для новых заявок
-   
+    [SerializeField] private Transform contractsContainer;
+    [SerializeField] private ContractsLoader contractsLoader;
     private void Start()
     {
+        createNewButton.onClick.AddListener(() => { contractsLoader.LoadByUserIDContracts(AuthManager.Instance.GetUserId()); });
         createNewButton.onClick.AddListener(CreateNewContract);
     }
 

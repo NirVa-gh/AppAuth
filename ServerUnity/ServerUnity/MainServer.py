@@ -367,8 +367,8 @@ def get_single_request(request_id):
         if conn:
             conn.close()
 
-"""@app.route('/api/requests', methods=['GET'])
-def get_requests():
+@app.route('/api/requestsByUserID', methods=['GET'])
+def get_requests_by_user_ID():
     try:
         # Проверка авторизации
         token = request.headers.get('Authorization')
@@ -419,7 +419,7 @@ def get_requests():
         return jsonify({'success': False, 'message': str(e)}), 500
     finally:
         if conn:
-            conn.close()"""
+            conn.close()
 
 @app.route('/api/requests/<int:request_id>', methods=['PUT'])
 def update_request(request_id):
