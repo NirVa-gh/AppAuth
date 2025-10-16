@@ -9,11 +9,12 @@ public class ContractView : MonoBehaviour
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private TMP_Text idText;
 
+
     public void Initialize(RequestData request)
     {
         titleText.text = request.title;
         contentText.text = request.content;
         statusText.text = request.status;
-        idText.text = $"ID: {request.id}";
+        idText.text = $"{request.id}";
     }
 }

@@ -3,6 +3,7 @@ using System.Collections; // Добавлено для корутин
 using TMPro;
 using UIWidgets;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class ContractEditor : Utility

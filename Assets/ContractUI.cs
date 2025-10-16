@@ -17,7 +17,7 @@ public class ContractUI : MonoBehaviour
     {
         contractId = contractData.id;
 
-        if (idText != null) idText.text = $"ID: {contractData.id}";
+        if (idText != null) idText.text = $"{contractData.id}";
         if (titleText != null) titleText.text = contractData.title;
         if (statusText != null) statusText.text = contractData.status;
 

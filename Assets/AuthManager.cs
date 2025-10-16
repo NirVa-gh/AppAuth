@@ -56,6 +56,32 @@ public class AuthManager : MonoBehaviour
     {
         StartCoroutine(DeleteRequestCoroutine(requestId, callback));
     }
+    public void DeleteRequestAdmin(int requestId, Action<bool, string> callback)
+    {
+        StartCoroutine(DeleteRequestAdminCoroutine(requestId, callback));
+    }
+
+    private IEnumerator DeleteRequestAdminCoroutine(int requestId, Action<bool, string> callback)
+    {
+        string url = $"{baseURL}/api/requestsAdmin/{requestId}";
+        string authToken = PlayerPrefs.GetString("auth_token");
+        using (UnityWebRequest www = UnityWebRequest.Delete(url))
+        {
+            www.SetRequestHeader("Authorization", $"Bearer {authToken}");
+            www.downloadHandler = new DownloadHandlerBuffer();
+            yield return www.SendWebRequest();
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                callback(true, "Заявка удалена");
+            }
+            else
+            {
+                callback(false, $"Ошибка: {www.error}");
+            }
+        }
+
+    }
+
     public void GetRequest(int requestId, Action<bool, RequestData> callback)
     {
         StartCoroutine(GetRequestCoroutine(requestId, callback));

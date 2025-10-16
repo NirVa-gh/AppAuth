@@ -514,14 +514,70 @@ def delete_request(request_id):
         if not request_data:
             return jsonify({'success': False, 'message': 'Заявка не найдена'}), 404
 
-        if request_data[0] != user_id:
-            return jsonify({'success': False, 'message': 'Недостаточно прав'}), 403
+        if request_data[0] != user_id :
+            print(user_id)
+            return jsonify({'success': False, 'message': 'Недостаточно прав'}), 403 ## request_data[0] != user_id???
 
         # Удаляем заявку
         cursor.execute('DELETE FROM requests WHERE id = ?', (request_id,))
         conn.commit()
 
         return jsonify({'success': True, 'message': 'Заявка удалена'}), 200
+
+    except sqlite3.Error as e:
+        if conn:
+            conn.rollback()
+        return jsonify({'success': False, 'message': f'Ошибка базы данных: {str(e)}'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Неизвестная ошибка: {str(e)}'}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.route('/api/requestsAdmin/<int:request_id>', methods=['DELETE'])
+def delete_request_admin(request_id):
+    """Удаление заявки (администратором, если is_partner = 1)"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'success': False, 'message': 'Токен отсутствует'}), 401
+
+    conn = None
+    try:
+        # Проверяем токен
+        try:
+            decoded = jwt.decode(token.split()[1], app.config['SECRET_KEY'], algorithms=['HS256'])
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Ошибка токена: {str(e)}'}), 401
+
+        username = decoded.get('username')
+        user_id = get_user_id(username)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'Пользователь не найден'}), 404
+
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+
+        # Проверяем, является ли пользователь администратором (is_partner = 1)
+        cursor.execute('SELECT is_partner FROM users WHERE id = ?', (user_id,))
+        user_data = cursor.fetchone()
+
+        if not user_data:
+            return jsonify({'success': False, 'message': 'Пользователь не найден'}), 404
+
+        if user_data[0] != 1:
+            return jsonify({'success': False, 'message': 'Недостаточно прав (нужен администратор)'}), 403
+
+        # Проверяем, существует ли заявка
+        cursor.execute('SELECT id FROM requests WHERE id = ?', (request_id,))
+        if not cursor.fetchone():
+            return jsonify({'success': False, 'message': 'Заявка не найдена'}), 404
+
+        # Удаляем заявку
+        cursor.execute('DELETE FROM requests WHERE id = ?', (request_id,))
+        conn.commit()
+
+        return jsonify({'success': True, 'message': f'Заявка {request_id} удалена администратором'}), 200
 
     except sqlite3.Error as e:
         if conn:
