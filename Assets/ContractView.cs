@@ -13,7 +13,7 @@ public class ContractView : MonoBehaviour
     public void Initialize(RequestData request)
     {
         titleText.text = request.title;
-        contentText.text = request.content;
+        //contentText.text = request.content;
         statusText.text = request.status;
         idText.text = $"{request.id}";
     }

@@ -60,7 +60,6 @@ public class AuthManager : MonoBehaviour
     {
         StartCoroutine(DeleteRequestAdminCoroutine(requestId, callback));
     }
-
     private IEnumerator DeleteRequestAdminCoroutine(int requestId, Action<bool, string> callback)
     {
         string url = $"{baseURL}/api/requestsAdmin/{requestId}";

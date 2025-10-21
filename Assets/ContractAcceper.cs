@@ -13,9 +13,12 @@ public class ContractAcceper : Utility
     [Header("Buttons")]
     [SerializeField] private Button acceptButton;
     [SerializeField] private Button declineButton;
+    [SerializeField] private Button editButton;
+
 
     [Header("References")]
     [SerializeField] private ContractsLoader contractsLoader;
+    [SerializeField] private GameObject readerContractPanel;
 
     public static event Action<int> OnRequestUpdated;
     private RequestUI requestUI;
@@ -28,6 +31,7 @@ public class ContractAcceper : Utility
     {
         OnRequestUpdated += (id) => RefreshTable();
         declineButton.onClick.AddListener(OnDeleteClicked);
+        editButton.onClick.AddListener(OnEditButtonClicked);
 
         string rawText = IDText.text.Trim();
         if (!int.TryParse(rawText, out currentRequestId)) // ID:20
@@ -49,7 +53,41 @@ public class ContractAcceper : Utility
         //StartAutoUpdate();
     }
 
+    private void OnEditButtonClicked()
+    {
 
+        // Активируем панель редактирования
+        if (readerContractPanel != null)
+        {
+            readerContractPanel.GetComponent<UIWidget>().Show();
+            LoadRequestData(currentRequestId); // Загружаем данные заявки
+        }
+        else
+        {
+            Debug.LogError("EditContractPanel не назначен в инспекторе");
+        }
+    }
+
+    public void LoadRequestData(int requestId)
+    {
+        AuthManager.Instance.GetRequest(requestId, (success, requestData) =>
+        {
+            if (success && requestData != null)
+            {
+                var readerContractPanelUI = readerContractPanel.GetComponent<readerPanel>();
+                // Дополнительно обновляем текстовые поля в ContractEditor (если нужно)
+                readerContractPanelUI.idText.text = requestData.id.ToString();
+                readerContractPanelUI.titleText.text = requestData.title;
+                readerContractPanelUI.contentText.text = requestData.content;
+
+                currentRequestId = requestData.id;
+            }
+            else
+            {
+                Debug.LogError("Не удалось загрузить данные заявки");
+            }
+        });
+    }
     private void OnDestroy()
     {
         // Остановка при уничтожении объекта
