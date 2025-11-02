@@ -8,7 +8,8 @@ using UnityEngine.Networking;
 public class AuthManager : MonoBehaviour
 {
     private string serverURL = "http://localhost:5000/api";
-    public string baseURL = "http://127.0.0.1:5000";
+    public string baseURL = "http://192.168.0.100:5000";
+    //public string baseURL = "http://127.0.0.1:5000";
 
     public bool IsInitialized { get; private set; }
     public static event Action<bool> OnAuthStateChanged;
@@ -114,6 +115,7 @@ public class AuthManager : MonoBehaviour
         StartCoroutine(RegisterAdminCoroutine(username, email, password, callback));
     }
 
+    //public string GetCurrentUser
     private IEnumerator RegisterAdminCoroutine(string username, string email, string password, Action<bool, string> callback)
     {
         WWWForm form = new WWWForm();

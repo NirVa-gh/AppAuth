@@ -711,4 +711,4 @@ def get_requests():
 
 if __name__ == '__main__':
     init_db()  # Инициализация базы данных
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)

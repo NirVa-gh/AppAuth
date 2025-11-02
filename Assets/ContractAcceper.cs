@@ -15,6 +15,9 @@ public class ContractAcceper : Utility
     [SerializeField] private Button declineButton;
     [SerializeField] private Button editButton;
 
+    [Header("Acceper User Display")]
+    [SerializeField] private GameObject acceperUserDisplay;
+    [SerializeField] private TMP_Text acceperUsernameText;
 
     [Header("References")]
     [SerializeField] private ContractsLoader contractsLoader;
@@ -26,19 +29,28 @@ public class ContractAcceper : Utility
     private Coroutine updateRoutine;
     private bool isUpdating;
     private UIWidget uIWidget;
+    private bool isAcceper = false;
 
     private void Start()
     {
         OnRequestUpdated += (id) => RefreshTable();
         declineButton.onClick.AddListener(OnDeleteClicked);
         editButton.onClick.AddListener(OnEditButtonClicked);
-
         string rawText = IDText.text.Trim();
+
+
         if (!int.TryParse(rawText, out currentRequestId)) // ID:20
         {
             Debug.LogWarning("Failed to parse request ID");
             currentRequestId = 0;
-        }///!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        }
+
+        if (acceperUserDisplay !=null)
+        {
+            acceperUserDisplay.SetActive(false);
+        }
+
+
         Debug.LogWarning(currentRequestId);
         acceptButton.onClick.AddListener(() =>
         {
@@ -47,10 +59,27 @@ public class ContractAcceper : Utility
                 Debug.LogWarning("Попытка редактирования без ID заявки");
                 return;
             }
-           //ACCEPT METHOD
+            OnAcceptClicked();
         });
 
         //StartAutoUpdate();
+    }
+
+    private void OnAcceptClicked()
+    {
+        if (isAcceper) return;
+
+        string currentUserName = GetCurrentUserName();
+        if (string.IsNullOrEmpty(currentUserName))
+        {
+            Debug.LogWarning("User name is not found");
+            return;
+        }
+    }
+
+    private string GetCurrentUserName()
+    {
+        throw new NotImplementedException();
     }
 
     private void OnEditButtonClicked()
