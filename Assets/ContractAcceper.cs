@@ -37,6 +37,8 @@ public class ContractAcceper : Utility
         declineButton.onClick.AddListener(OnDeleteClicked);
         editButton.onClick.AddListener(OnEditButtonClicked);
         string rawText = IDText.text.Trim();
+        readerContractPanel = GameObject.Find("ReadContractPanel");
+
 
 
         if (!int.TryParse(rawText, out currentRequestId)) // ID:20
