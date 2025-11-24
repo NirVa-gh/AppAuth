@@ -1269,7 +1269,7 @@ MonoBehaviour:
   IDText: {fileID: 2158071448258792090}
   acceptButton: {fileID: 4359173668728077333}
   declineButton: {fileID: 3725242669231588851}
-  editButton: {fileID: 1578956230868047519}
+  readButton: {fileID: 1578956230868047519}
   acceperUserDisplay: {fileID: 0}
   acceperUsernameText: {fileID: 0}
   contractsLoader: {fileID: 0}

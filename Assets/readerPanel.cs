@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-public class readerPanel : MonoBehaviour
+public class ReaderPanel : MonoBehaviour
 {
     [Header("UI Elements")]
     [SerializeField] public TMP_Text idText;

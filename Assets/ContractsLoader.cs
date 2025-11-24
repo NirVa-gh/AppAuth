@@ -10,7 +10,6 @@ public class ContractsLoader : MonoBehaviour
     [Header("Required References")]
     [SerializeField] private GameObject contractPrefab;
     [SerializeField] private Transform contentParent;
-    //[SerializeField] private Button refreshButton;
     [SerializeField] private Button refreshButtonID;
     [SerializeField] private Button createButton;
 

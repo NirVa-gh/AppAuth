@@ -1,11 +1,12 @@
 using System;
-using System.Collections; // Добавлено для корутин
+using System.Collections;
 using TMPro;
 using UIWidgets;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ContractAcceper : Utility
+public class ContractAcceper : MonoBehaviour
 {
     [Header("Text Fields")]
     [SerializeField] private TMP_Text IDText;
@@ -13,7 +14,7 @@ public class ContractAcceper : Utility
     [Header("Buttons")]
     [SerializeField] private Button acceptButton;
     [SerializeField] private Button declineButton;
-    [SerializeField] private Button editButton;
+    [SerializeField] private Button readButton;
 
     [Header("Acceper User Display")]
     [SerializeField] private GameObject acceperUserDisplay;
@@ -33,15 +34,14 @@ public class ContractAcceper : Utility
 
     private void Start()
     {
-        OnRequestUpdated += (id) => RefreshTable();
         declineButton.onClick.AddListener(OnDeleteClicked);
-        editButton.onClick.AddListener(OnEditButtonClicked);
+        readButton.onClick.AddListener(OnEditButtonClicked);
         string rawText = IDText.text.Trim();
         readerContractPanel = GameObject.Find("ReadContractPanel");
 
 
 
-        if (!int.TryParse(rawText, out currentRequestId)) // ID:20
+        if (!int.TryParse(rawText, out currentRequestId))
         {
             Debug.LogWarning("Failed to parse request ID");
             currentRequestId = 0;
@@ -51,9 +51,6 @@ public class ContractAcceper : Utility
         {
             acceperUserDisplay.SetActive(false);
         }
-
-
-        Debug.LogWarning(currentRequestId);
         acceptButton.onClick.AddListener(() =>
         {
             if (currentRequestId <= 0)
@@ -64,12 +61,12 @@ public class ContractAcceper : Utility
             OnAcceptClicked();
         });
 
-        //StartAutoUpdate();
     }
 
     private void OnAcceptClicked()
     {
         if (isAcceper) return;
+        // Меняем статус заявки на accepted и все заявки со статусом будут спавниться в панели 
 
         string currentUserName = GetCurrentUserName();
         if (string.IsNullOrEmpty(currentUserName))
@@ -86,12 +83,11 @@ public class ContractAcceper : Utility
 
     private void OnEditButtonClicked()
     {
+        Debug.Log($"currentRequestId - {currentRequestId}");
 
-        // Активируем панель редактирования
         if (readerContractPanel != null)
         {
-            readerContractPanel.GetComponent<UIWidget>().Show();
-            LoadRequestData(currentRequestId); // Загружаем данные заявки
+            LoadRequestData(currentRequestId);
         }
         else
         {
@@ -103,10 +99,9 @@ public class ContractAcceper : Utility
     {
         AuthManager.Instance.GetRequest(requestId, (success, requestData) =>
         {
-            if (success && requestData != null)
+            if (success)
             {
-                var readerContractPanelUI = readerContractPanel.GetComponent<readerPanel>();
-                // Дополнительно обновляем текстовые поля в ContractEditor (если нужно)
+                var readerContractPanelUI = readerContractPanel.GetComponent<ReaderPanel>();
                 readerContractPanelUI.idText.text = requestData.id.ToString();
                 readerContractPanelUI.titleText.text = requestData.title;
                 readerContractPanelUI.contentText.text = requestData.content;
@@ -115,13 +110,12 @@ public class ContractAcceper : Utility
             }
             else
             {
-                Debug.LogError("Не удалось загрузить данные заявки");
+                Debug.LogError($"Не удалось загрузить данные заявки");
             }
         });
     }
     private void OnDestroy()
     {
-        // Остановка при уничтожении объекта
         StopAutoUpdate();
     }
 
@@ -166,14 +160,6 @@ public class ContractAcceper : Utility
         yield return new WaitForSeconds(0.5f); // Небольшая задержка для сервера
         OnRequestUpdated?.Invoke(currentRequestId);
     }
-    private void RefreshTable()
-    {
-        // Ваш метод для полного обновления таблицы
-        Debug.Log($"Обновляем таблицу после изменения заявки {currentRequestId}");
-        // Например:
-        // FindObjectOfType<RequestsTableUI>()?.Refresh();
-    }
-
     public void OnDeleteClicked()
     {
         AuthManager.Instance.DeleteRequestAdmin(currentRequestId, (success, message) =>
@@ -181,11 +167,7 @@ public class ContractAcceper : Utility
             if (success)
             {
                 Debug.Log("Заявка удалена");
-
-                // Уничтожаем префаб заявки
-                Destroy(gameObject); // Удаляем текущий ContractPrefab
-
-                // Если нужно обновить родительский UI (например, список заявок)
+                Destroy(gameObject); 
                 OnRequestUpdated?.Invoke(currentRequestId);
             }
             else

@@ -17,6 +17,7 @@ public class ContractEditor : Utility
     [SerializeField] private Button editButton;
     [SerializeField] private Button deleteButton;
 
+
     [Header("References")]
     [SerializeField] private GameObject editContractPanel;
     [SerializeField] private ContractsLoader contractsLoader;
@@ -32,6 +33,7 @@ public class ContractEditor : Utility
         editButton.onClick.AddListener(OnEditButtonClicked);
         OnRequestUpdated += (id) => RefreshTable();
         deleteButton.onClick.AddListener(OnDeleteClicked);
+
 
         if (!int.TryParse(IDText.text, out currentRequestId))
         {
@@ -193,7 +195,7 @@ public class ContractEditor : Utility
             if (success)
             {
                 Debug.Log("Заявка удалена");
-                ShowMessage("Заявка удалена");
+                //ShowMessage("Заявка удалена");
 
                 // Уничтожаем префаб заявки
                 Destroy(gameObject); // Удаляем текущий ContractPrefab
@@ -204,7 +206,7 @@ public class ContractEditor : Utility
             else
             {
                 Debug.LogError($"Ошибка удаления: {message}");
-                ShowMessage("Ошибка при удалении");
+                //ShowMessage("Ошибка при удалении");
             }
         });
     }

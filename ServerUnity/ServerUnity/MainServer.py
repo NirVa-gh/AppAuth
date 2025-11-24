@@ -334,13 +334,14 @@ def get_single_request(request_id):
         cursor.execute(
             '''SELECT id, title, content, status, 
                strftime('%Y-%m-%d %H:%M:%S', created_at) 
-               FROM requests WHERE id = ? AND user_id = ?''',
-            (request_id, user_id)
+               FROM requests WHERE id = ?''',
+            (request_id,)
         )
-        db_request = cursor.fetchone()  # Переименовали переменную во избежание путаницы
+        db_request = cursor.fetchone()
 
         if not db_request:
-            return jsonify({'success': False, 'message': 'Заявка не найдена'}), 404
+            print(request_id, user_id)
+            return jsonify({'success': False, 'message': f'Заявка не найдена '}), 404
 
         # Формируем ответ
         response_data = {
@@ -534,7 +535,6 @@ def delete_request(request_id):
         if conn:
             conn.close()
 
-
 @app.route('/api/requestsAdmin/<int:request_id>', methods=['DELETE'])
 def delete_request_admin(request_id):
     """Удаление заявки (администратором, если is_partner = 1)"""
@@ -588,7 +588,6 @@ def delete_request_admin(request_id):
     finally:
         if conn:
             conn.close()
-
 
 @app.route('/api/requests', methods=['GET'])
 def get_all_requests():
