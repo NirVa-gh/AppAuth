@@ -9,12 +9,10 @@ public class ViewContractPanel : MonoBehaviour
     [SerializeField] private GameObject contractPrefab; 
     [SerializeField] private Transform contentParent;
     [SerializeField] private Button refreshButton;
-    [SerializeField] private Button listContractButton;
 
     private void Start()
     {
         refreshButton.onClick.AddListener(LoadAllContracts);
-        listContractButton.onClick.AddListener(OpenListContract);
         LoadAllContracts();
     }
 

@@ -61,6 +61,12 @@ public class AuthManager : MonoBehaviour
     {
         StartCoroutine(DeleteRequestAdminCoroutine(requestId, callback));
     }
+
+    public void AcceptRequestAdmin(int requestId, Action<bool, string> callback)
+    {
+        StartCoroutine(AcceptRequestAdminCoroutine(requestId, callback));
+    }
+
     private IEnumerator DeleteRequestAdminCoroutine(int requestId, Action<bool, string> callback)
     {
         string url = $"{baseURL}/api/requestsAdmin/{requestId}";
@@ -82,6 +88,35 @@ public class AuthManager : MonoBehaviour
 
     }
 
+    private IEnumerator AcceptRequestAdminCoroutine(int requestId, Action<bool, string> callback)
+    {
+        string url = $"{baseURL}/api/requestsAdminAccept/{requestId}";
+        string authToken = PlayerPrefs.GetString("auth_token");
+
+        // Создаем JSON данные для изменения статуса
+        var jsonData = "{\"status\":\"Accepted\"}";
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
+
+        using (UnityWebRequest www = new UnityWebRequest(url, "PATCH"))
+        {
+            www.SetRequestHeader("Authorization", $"Bearer {authToken}");
+            www.SetRequestHeader("Content-Type", "application/json");
+            www.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            www.downloadHandler = new DownloadHandlerBuffer();
+
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                callback(true, "Статус заявки изменен на 'Accepted'");
+            }
+            else
+            {
+                callback(false, $"Ошибка: {www.error}");
+            }
+        }
+    }
+
     public void GetRequest(int requestId, Action<bool, RequestData> callback)
     {
         StartCoroutine(GetRequestCoroutine(requestId, callback));
@@ -93,6 +128,11 @@ public class AuthManager : MonoBehaviour
     public void GetAllRequests(Action<bool, List<RequestData>> callback)
     {
         StartCoroutine(GetAllRequestsCoroutine(callback));
+    }
+
+    public void GetAllAcceptedRequests(Action<bool, List<RequestData>> callback)
+    {
+        StartCoroutine(GetAllAcceptedRequestsCoroutine(callback));
     }
     private string ParseErrorMessage(UnityWebRequest www)
     {
@@ -396,6 +436,55 @@ public class AuthManager : MonoBehaviour
             }
         }
     }
+    private IEnumerator GetAllAcceptedRequestsCoroutine(Action<bool, List<RequestData>> callback)
+    {
+        string url = $"{baseURL}/api/requests/by-status/Accepted"; // Исправлен статус
+        string authToken = PlayerPrefs.GetString("auth_token");
+
+        using (UnityWebRequest www = UnityWebRequest.Get(url))
+        {
+            www.SetRequestHeader("Authorization", $"Bearer {authToken}"); // Раскомментировано
+            www.downloadHandler = new DownloadHandlerBuffer();
+
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                try
+                {
+                    // Используем правильный класс для десериализации
+                    var response = JsonUtility.FromJson<RequestsByStatusResponse>(www.downloadHandler.text);
+                    if (response.success)
+                    {
+                        callback(true, response.requests);
+                    }
+                    else
+                    {
+                        Debug.LogError($"Ошибка от сервера: {response.message}");
+                        callback(false, null);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Ошибка парсинга JSON: {e.Message}");
+                    callback(false, null);
+                }
+            }
+            else
+            {
+                Debug.LogError($"Ошибка сети: {www.error}");
+                if (www.responseCode == 401)
+                {
+                    Debug.LogError("Неавторизован - проверьте токен");
+                }
+                else if (www.responseCode == 403)
+                {
+                    Debug.LogError("Недостаточно прав - требуется администратор");
+                }
+                callback(false, null);
+            }
+        }
+    }
 
 
     [Serializable]
@@ -426,6 +515,13 @@ public class AuthResponse
     public string message;
     public int is_partner; 
     public bool IsPartner => is_partner == 1;
+}
+[System.Serializable]
+public class RequestsByStatusResponse
+{
+    public bool success;
+    public string message;
+    public List<RequestData> requests;
 }
 [Serializable]
 public class RequestData

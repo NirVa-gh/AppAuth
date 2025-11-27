@@ -482,9 +482,7 @@ def update_request(request_id):
 
     except Exception as e:
         return jsonify({'success': False, 'message': f'Ошибка сервера: {str(e)}'}), 500
-# ======================
-# Сверху работает
-# ======================
+
 
 @app.route('/api/requests/<int:request_id>', methods=['DELETE'])
 def delete_request(request_id):
@@ -700,6 +698,146 @@ def get_requests():
         return jsonify({'success': False, 'message': f'Database error: {str(e)}'}), 500
     except Exception as e:
         return jsonify({'success': False, 'message': f'Server error: {str(e)}'}), 500
+    finally:
+        if conn:
+            conn.close()
+
+# ======================
+# Сверху работает
+# ======================
+
+@app.route('/api/requestsAdminAccept/<int:request_id>', methods=['PATCH'])
+def update_request_status(request_id):
+    """Изменение статуса заявки администратором"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'success': False, 'message': 'Токен отсутствует'}), 401
+
+    # Получаем данные из тела запроса
+    data = request.get_json()
+    if not data or 'status' not in data:
+        return jsonify({'success': False, 'message': 'Не указан статус'}), 400
+
+    new_status = data['status']
+
+    # Проверяем допустимые статусы
+    allowed_statuses = ['Pending', 'Accepted', 'Rejected', 'Completed']
+    if new_status not in allowed_statuses:
+        return jsonify(
+            {'success': False, 'message': f'Недопустимый статус. Допустимые: {", ".join(allowed_statuses)}'}), 400
+
+    conn = None
+    try:
+        # Проверяем токен
+        try:
+            decoded = jwt.decode(token.split()[1], app.config['SECRET_KEY'], algorithms=['HS256'])
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Ошибка токена: {str(e)}'}), 401
+
+        username = decoded.get('username')
+        user_id = get_user_id(username)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'Пользователь не найден'}), 404
+
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+
+        # Проверяем, является ли пользователь администратором (is_partner = 1)
+        cursor.execute('SELECT is_partner FROM users WHERE id = ?', (user_id,))
+        user_data = cursor.fetchone()
+
+        if not user_data:
+            return jsonify({'success': False, 'message': 'Пользователь не найден'}), 404
+
+        if user_data[0] != 1:
+            return jsonify({'success': False, 'message': 'Недостаточно прав (нужен администратор)'}), 403
+
+        # Проверяем, существует ли заявка
+        cursor.execute('SELECT id FROM requests WHERE id = ?', (request_id,))
+        if not cursor.fetchone():
+            return jsonify({'success': False, 'message': 'Заявка не найдена'}), 404
+
+        # Обновляем статус заявки
+        cursor.execute(
+            'UPDATE requests SET status = ? WHERE id = ?',
+            (new_status, request_id)
+        )
+        conn.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Статус заявки {request_id} изменен на "{new_status}"'
+        }), 200
+
+    except sqlite3.Error as e:
+        if conn:
+            conn.rollback()
+        return jsonify({'success': False, 'message': f'Ошибка базы данных: {str(e)}'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Неизвестная ошибка: {str(e)}'}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+@app.route('/api/requests/by-status/<status>', methods=['GET'])
+def get_requests_by_status(status):
+    """Получение заявок по статусу"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'success': False, 'message': 'Токен отсутствует'}), 401
+
+    conn = None
+    try:
+        # Проверяем токен
+        try:
+            decoded = jwt.decode(token.split()[1], app.config['SECRET_KEY'], algorithms=['HS256'])
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Ошибка токена: {str(e)}'}), 401
+
+        username = decoded.get('username')
+        user_id = get_user_id(username)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'Пользователь не найден'}), 404
+
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+
+        # Проверяем права администратора
+        cursor.execute('SELECT is_partner FROM users WHERE id = ?', (user_id,))
+        user_data = cursor.fetchone()
+
+        if not user_data or user_data[0] != 1:
+            return jsonify({'success': False, 'message': 'Недостаточно прав'}), 403
+
+        # Получаем заявки по статусу
+        cursor.execute(
+            '''SELECT id, title, content, status, 
+               strftime('%Y-%m-%d %H:%M:%S', created_at) 
+               FROM requests WHERE status = ?''',
+            (status,)
+        )
+
+        requests = cursor.fetchall()
+        result = []
+        for req in requests:
+            result.append({
+                'id': req[0],
+                'title': req[1],
+                'content': req[2],
+                'status': req[3],
+                'created_at': req[4]
+            })
+
+        return jsonify({
+            'success': True,
+            'requests': result
+        }), 200
+
+    except sqlite3.Error as e:
+        return jsonify({'success': False, 'message': f'Ошибка базы данных: {str(e)}'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Неизвестная ошибка: {str(e)}'}), 500
     finally:
         if conn:
             conn.close()

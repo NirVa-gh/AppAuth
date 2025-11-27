@@ -51,7 +51,7 @@ public class ContractAcceper : MonoBehaviour
         {
             acceperUserDisplay.SetActive(false);
         }
-        acceptButton.onClick.AddListener(() =>
+        acceptButton?.onClick.AddListener(() =>
         {
             if (currentRequestId <= 0)
             {
@@ -67,13 +67,18 @@ public class ContractAcceper : MonoBehaviour
     {
         if (isAcceper) return;
         // Меняем статус заявки на accepted и все заявки со статусом будут спавниться в панели 
-
-        string currentUserName = GetCurrentUserName();
-        if (string.IsNullOrEmpty(currentUserName))
+        AuthManager.Instance.AcceptRequestAdmin(currentRequestId, (success, message) =>
         {
-            Debug.LogWarning("User name is not found");
-            return;
-        }
+            if (success)
+            {
+                Debug.Log("Заявка принята");
+                Destroy(gameObject);
+            }
+            else
+            {
+                Debug.LogError($"Ошибка принятия: {message}");
+            }
+        });
     }
 
     private string GetCurrentUserName()
